@@ -1,29 +1,23 @@
 const fs = require('fs');
-const csv = require('csv-parser');
 
-const csvFilePath = process.argv[2];
-const columnName = process.argv[3];
+const filePaths = process.argv.slice(2);
+let concatenatedContent = '';
 
-let sum = 0;
-let count = 0;
-
-fs.createReadStream(csvFilePath)
-  .pipe(csv())
-  .on('data', (data) => {
-    const value = Number(data[columnName]);
-    if (!isNaN(value)) {
-      sum += value;
-      count++;
+filePaths.forEach((filePath) => {
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(`Error reading file ${filePath}: ${err}`);
+      return;
     }
-  })
-  .on('end', () => {
-    if (count > 0) {
-      const average = sum / count;
-      console.log(`The average value of ${columnName} is: ${average}`);
-    } else {
-      console.log(`No valid values found in the ${columnName} column.`);
+    concatenatedContent += data;
+    if (filePaths.indexOf(filePath) === filePaths.length - 1) {
+      fs.writeFile('output.txt', concatenatedContent, (err) => {
+        if (err) {
+          console.error(`Error writing file: ${err}`);
+          return;
+        }
+        console.log('Concatenated content written to output.txt');
+      });
     }
-  })
-  .on('error', (err) => {
-    console.error(`Error reading CSV file: ${err}`);
   });
+});
